@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  transition: background-color 0.3s ease;
+}
+
+.light {
+  background-color: #fce7f3;
+  color: #111827;
+}
+
+.dark {
+  background-color: #1e3a8a;
+  color: #ffffff;
+}

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Command System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.light {
+            background-color: #fce7f3;
+            color: #1a1a1a;
+        }
+
+        body.dark {
+            background-color: #0f1c47;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark .sun,
+        body.light .moon {
+            display: none;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 4rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .mic-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .mic-button {
+            background-color: #3b82f6;
+            border: none;
+            border-radius: 50%;
+            width: 4rem;
+            height: 4rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .mic-button:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .mic-button.listening {
+            background-color: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        #status-text {
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+
+        .transcript {
+            text-align: center;
+            color: #4b5563;
+            font-size: 0.9rem;
+            min-height: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .commands-list {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .commands-list h2 {
+            color: #1a1a1a;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .commands-list ul {
+            list-style-position: inside;
+            color: #4b5563;
+        }
+
+        .commands-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="light">
+    <div class="container">
+        <button id="theme-toggle" class="theme-toggle">
+            <span class="moon">🌙</span>
+            <span class="sun">☀️</span>
+        </button>
+
+        <div class="card">
+            <h1>Voice Command System</h1>
+
+            <div class="mic-container">
+                <button id="mic-button" class="mic-button">
+                    <span class="mic-icon">🎤</span>
+                </button>
+                <p id="status-text">Click the mic to start</p>
+            </div>
+
+            <p id="transcript" class="transcript"></p>
+
+            <div class="commands-list">
+                <h2>Available Commands:</h2>
+                <ul>
+                    <li>"Open Github"</li>
+                    <li>"Open Google"</li>
+                    <li>"Open ChatGPT"</li>
+                    <li>"Open LinkedIn"</li>
+                    <li>"Show Time"</li>
+                    <li>"Open Maps"</li>
+                    <li>"Open Calculator"</li>
+                    <li>"Open YouTube"</li>
+                    <li>"Open Spotify"</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('theme-toggle');
+            const micButton = document.getElementById('mic-button');
+            const statusText = document.getElementById('status-text');
+            const transcriptText = document.getElementById('transcript');
+            
+            let isListening = false;
+
+            // Theme Toggle
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark');
+                document.body.classList.toggle('light');
+            });
+
+            // Voice Recognition Setup
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+            if (recognition) {
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    micButton.classList.add('listening');
+                    statusText.textContent = 'Listening...';
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    statusText.textContent = 'Click the mic to start';
+                };
+
+                recognition.onresult = (event) => {
+                    const command = event.results[0][0].transcript.toLowerCase().trim();
+                    transcriptText.textContent = `Last command: ${command}`;
+                    
+                    // Handle commands
+                    const executeCommand = () => {
+                        if (command.includes('open github')) {
+                            window.open('https://github.com', '_blank');
+                        } else if (command.includes('open google')) {
+                            window.open('https://www.google.com', '_blank');
+                        } else if (command.includes('open chatgpt')) {
+                            window.open('https://chat.openai.com', '_blank');
+                        } else if (command.includes('open linkedin')) {
+                            window.open('https://www.linkedin.com', '_blank');
+                        } else if (command.includes('show time')) {
+                            const now = new Date();
+                            alert(`Current time: ${now.toLocaleTimeString()}`);
+                        } else if (command.includes('open map')) {
+                            window.open('https://www.google.com/maps', '_blank');
+                        } else if (command.includes('open calculator')) {
+                            window.open('https://www.google.com/search?q=calculator', '_blank');
+                        } else if (command.includes('open youtube')) {
+                            window.open('https://www.youtube.com', '_blank');
+                        } else if (command.includes('open spotify')) {
+                            window.open('https://open.spotify.com', '_blank');
+                        } else {
+                            statusText.textContent = 'Command not recognized. Try again.';
+                        }
+                    };
+
+                    // Execute command with a slight delay to ensure proper handling
+                    setTimeout(executeCommand, 100);
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    statusText.textContent = 'Error occurred. Try again.';
+                };
+
+                // Mic Button Click Handler
+                micButton.addEventListener('click', () => {
+                    if (!isListening) {
+                        recognition.start();
+                    } else {
+                        recognition.stop();
+                    }
+                });
+            } else {
+                statusText.textContent = 'Speech recognition not supported in this browser';
+                micButton.disabled = true;
+                micButton.style.backgroundColor = '#ccc';
+            }
+        });
+    </script>
+</body>
+</html>
